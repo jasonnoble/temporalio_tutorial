@@ -1,34 +1,19 @@
-import { Connection, Client } from '@temporalio/client';
-import { example } from './workflows';
+import { Connection, Client } from '@temporalio/client'; 
+import { listS3ObjectsWorkflow } from './workflows/listS3ObjectsWorkflow';
 import { nanoid } from 'nanoid';
 
-async function run() {
-    // Connect to the default Server location (localhost:7233)
+async function run(){
     const connection = await Connection.connect();
-    // In production, pass options to configure TLS and other settings:
-    // {
-    //   address: 'foo.bar.tmprl.cloud',
-    //   tls: {}
-    // }
-
-    const client = new Client({
-        connection,
-        // namespace: 'foo.bar', // connects to 'default' namespace if not specified
-    });
-
-    const handle = await client.workflow.start(example, {
-        // type inference works! args: [name: string]
-        args: ['Temporal'],
-        taskQueue: 'hello-world',
-        // in practice, use a meaningful business ID, like customerId or transactionId
+    const client = new Client({});
+    const handle = await client.workflow.start(listS3ObjectsWorkflow,{
+        args: ['my-bucket', 1],
+        taskQueue: 's3-list-objects',
         workflowId: 'workflow-' + nanoid(),
-    });
-    console.log(`Started workflow ${handle.workflowId}`);
-
-    // optional: wait for client result
-    console.log(await handle.result()); // Hello, Temporal!
+    })
+    console.log(await handle.result());
 }
 
+// Replace 'my-bucket' with the name of your S3 bucket and set maxKeys as needed
 run().catch((err) => {
     console.error(err);
     process.exit(1);
